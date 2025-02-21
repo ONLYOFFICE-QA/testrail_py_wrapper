@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from typing import Optional, Dict, Any
-
 import aiohttp
+
+from typing import Optional, Dict, Any
 
 
 class APIClient:
