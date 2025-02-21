@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import time
-
 from .utils.decorators import singleton
 from .testrail_api import TestRailAPI
 
@@ -133,7 +131,6 @@ class TestManager:
         :param section_title: The title of the section.
         :return: None
         """
-        start_time = time.perf_counter()
         project_id = await self.get_project_id_by_name(project_name)
         plan_id = await self.get_or_create_plan_id(project_id, plan_name)
         suite_id = await self.get_or_create_suite_id(project_id, suite_name)
@@ -141,4 +138,3 @@ class TestManager:
         test_id = await self.get_or_create_test_id(run_id, case_title, project_id, suite_id, section_title)
         await self.api.add_result(test_id, result)
         print(f"✅ Result added to test '{case_title}'")
-        print(f"⏱️  Execution time: {time.perf_counter() - start_time:.2f} seconds")
