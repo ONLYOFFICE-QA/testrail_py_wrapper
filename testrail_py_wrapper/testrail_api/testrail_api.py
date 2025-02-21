@@ -13,7 +13,8 @@ class TestRailAPI:
     async def get_run_id_by_name(
             self,
             plan_id: int,
-            run_name: str
+            run_name: str,
+            no_cache: bool = False
     ) -> Optional[int]:
         """
         Gets the ID of a test run by name within a Test Plan.
@@ -22,7 +23,7 @@ class TestRailAPI:
         :param run_name: The name of the test run.
         :return: The ID of the test run or None if not found.
         """
-        test_plan = await self.get_plan(plan_id)
+        test_plan = await self.get_plan(plan_id, no_cache=no_cache)
         if not test_plan or "entries" not in test_plan:
             return None
 
@@ -33,50 +34,51 @@ class TestRailAPI:
 
         return None
 
-    async def get_plan(self, plan_id: int) -> Optional[Dict[str, Any]]:
+    async def get_plan(self, plan_id: int, no_cache: bool = False) -> Optional[Dict[str, Any]]:
         """
         Gets a Test Plan by its ID.
 
         :param plan_id: The ID of the test plan.
         :return: The test plan as a dictionary or None if not found.
         """
-        response = await self.api_client.request("GET", f"get_plan/{plan_id}")
+        response = await self.api_client.request("GET", f"get_plan/{plan_id}", no_cache=no_cache)
         if response and "id" in response:
             return response
         return None
 
-    async def get_projects(self) -> dict[str, Any]:
+    async def get_projects(self, no_cache: bool = False) -> dict[str, Any]:
         """
         Gets all projects.
 
         :return: List of projects.
         """
-        return await self.api_client.request('GET', 'get_projects')
+        return await self.api_client.request('GET', 'get_projects', no_cache=no_cache)
 
-    async def get_project_id_by_name(self, name: str) -> Optional[int]:
+    async def get_project_id_by_name(self, name: str, no_cache: bool = False) -> Optional[int]:
         """
         Gets the ID of a project by its name.
 
         :param name: The name of the project.
         :return: The ID of the project or None if not found.
         """
-        projects = await self.get_projects()
+        projects = await self.get_projects(no_cache=no_cache)
         project = next((p for p in projects if p['name'] == name), None)
         return project['id'] if project else None
 
-    async def get_suites(self, project_id: int) -> dict[str, Any]:
+    async def get_suites(self, project_id: int, no_cache: bool = False) -> dict[str, Any]:
         """
         Gets all test suites for a given project ID.
 
         :param project_id: The ID of the project.
         :return: List of test suites.
         """
-        return await self.api_client.request('GET', f'get_suites/{project_id}')
+        return await self.api_client.request('GET', f'get_suites/{project_id}', no_cache=no_cache)
 
     async def get_suite_id_by_name(
             self,
             project_id: int,
-            suite_name: str
+            suite_name: str,
+            no_cache: bool = False
     ) -> Optional[int]:
         """
         Gets the ID of a test suite by its name.
@@ -85,14 +87,15 @@ class TestRailAPI:
         :param suite_name: The name of the test suite.
         :return: The ID of the test suite or None if not found.
         """
-        suites = await self.get_suites(project_id)
+        suites = await self.get_suites(project_id, no_cache=no_cache)
         suite = next((s for s in suites if s['name'] == suite_name), None)
         return suite['id'] if suite else None
 
     async def get_sections(
             self,
             project_id: int,
-            suite_id: int
+            suite_id: int,
+            no_cache: bool = False
     ) -> dict[str, Any]:
         """
         Gets all test sections for a given project and suite ID.
@@ -101,13 +104,14 @@ class TestRailAPI:
         :param suite_id: The ID of the suite.
         :return: List of test sections.
         """
-        return await self.api_client.request('GET', f'get_sections/{project_id}&suite_id={suite_id}')
+        return await self.api_client.request('GET', f'get_sections/{project_id}&suite_id={suite_id}', no_cache=no_cache)
 
     async def get_section_id_by_name(
             self,
             project_id: int,
             suite_id: int,
-            section_name: str
+            section_name: str,
+            no_cache: bool = False
     ) -> Optional[int]:
         """
         Gets the ID of a test section by its name.
@@ -117,23 +121,24 @@ class TestRailAPI:
         :param section_name: The name of the section.
         :return: The ID of the section or None if not found.
         """
-        sections = await self.get_sections(project_id, suite_id)
+        sections = await self.get_sections(project_id, suite_id, no_cache=no_cache)
         section = next((s for s in sections if s['name'] == section_name), None)
         return section['id'] if section else None
 
-    async def get_plans(self, project_id: int) -> dict[str, Any]:
+    async def get_plans(self, project_id: int, no_cache: bool = False) -> dict[str, Any]:
         """
         Gets all test plans for a given project ID.
 
         :param project_id: The ID of the project.
         :return: List of test plans.
         """
-        return await self.api_client.request('GET', f'get_plans/{project_id}')
+        return await self.api_client.request('GET', f'get_plans/{project_id}', no_cache=no_cache)
 
     async def get_plan_id_by_name(
             self,
             project_id: int,
-            plan_name: str
+            plan_name: str,
+            no_cache: bool = False
     ) -> Optional[int]:
         """
         Gets the ID of a test plan by its name.
@@ -142,7 +147,7 @@ class TestRailAPI:
         :param plan_name: The name of the test plan.
         :return: The ID of the test plan or None if not found.
         """
-        plans = await self.get_plans(project_id)
+        plans = await self.get_plans(project_id, no_cache=no_cache)
         plan = next((p for p in plans if p['name'] == plan_name), None)
         return plan['id'] if plan else None
 
@@ -190,7 +195,6 @@ class TestRailAPI:
         :param description: The description or steps for the test case.
         :return: The ID of the new test case or None if not created.
         """
-
         new_test_case = await self.api_client.request(
             'POST', f'add_case/{section_id}',
             {
