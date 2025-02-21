@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+import logging
+from os import getcwd, makedirs
+from os.path import join, dirname
+
 from .utils.decorators import singleton
 from .testrail_api import TestRailAPI
 
@@ -15,6 +19,8 @@ class TestManager:
         Initializes the TestManager with an API client instance.
         """
         self.api = TestRailAPI()
+        self.log_file = join(getcwd(), "testrail_log", 'test_rail.log')
+
 
     async def get_project_id_by_name(self, name: str) -> int | None:
         """
@@ -101,11 +107,12 @@ class TestManager:
         :param section_title: The title of the section.
         :return: The ID of the test.
         """
-        test_id = await self.api.get_test_id_by_name(run_id, case_title)
+        test_id = await self.api.get_test_id_by_name(run_id, case_title, no_cache=False)
         if not test_id:
             section_id = await self.get_or_create_section_id(project_id, suite_id, section_title)
             await self.api.create_test_case(section_id, case_title, case_title)
-            test_id = await self.api.get_test_id_by_name(run_id, case_title, no_cache=True) 
+            test_id = await self.api.get_test_id_by_name(run_id, case_title, no_cache=True)
+
             if not test_id:
                 raise ValueError(f"❌ Failed to get test ID for '{case_title}'")
 
@@ -131,10 +138,19 @@ class TestManager:
         :param section_title: The title of the section.
         :return: None
         """
-        project_id = await self.get_project_id_by_name(project_name)
-        plan_id = await self.get_or_create_plan_id(project_id, plan_name)
-        suite_id = await self.get_or_create_suite_id(project_id, suite_name)
-        run_id = await self.get_or_create_run_id(plan_id, suite_name, suite_id)
-        test_id = await self.get_or_create_test_id(run_id, case_title, project_id, suite_id, section_title)
-        await self.api.add_result(test_id, result)
-        print(f"✅ Result added to test '{case_title}'")
+        try:
+            project_id = await self.get_project_id_by_name(project_name)
+            plan_id = await self.get_or_create_plan_id(project_id, plan_name)
+            suite_id = await self.get_or_create_suite_id(project_id, suite_name)
+            run_id = await self.get_or_create_run_id(plan_id, suite_name, suite_id)
+            test_id = await self.get_or_create_test_id(run_id, case_title, project_id, suite_id, section_title)
+            await self.api.add_result(test_id, result)
+            print(f"✅ Result added to test '{case_title}'")
+
+        except (ValueError, RuntimeError) as e:
+            await self._write_log(str(e))
+                
+    async def _write_log(self, message: str) -> None:
+        makedirs(dirname(self.log_file), exist_ok=True)
+        logging.basicConfig(filename=self.log_file, level=logging.ERROR, format='%(message)s')
+        logging.error(f"❌ {message}")
