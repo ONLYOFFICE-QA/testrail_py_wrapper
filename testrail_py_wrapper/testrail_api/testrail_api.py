@@ -115,6 +115,11 @@ class TestRailAPI:
         )
         return plan.get('id', None)
 
-    async def add_plan_entry(self, plan_id, entry_data):
+    async def add_plan_entry(self, plan_id, entry_data) -> Optional[int]:
         """Adds a new entry to a test plan."""
-        return await self._request('POST', f'add_plan_entry/{plan_id}', entry_data)
+        new_run = await self._request('POST', f'add_plan_entry/{plan_id}', entry_data)
+
+        if not new_run or "runs" not in new_run:
+            raise ValueError("Failed to add plan entry.")
+
+        return new_run["runs"][0]["id"]
