@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
+from .utils.decorators import singleton
 from .testrail_api import TestRailAPI
-from testrail_py_wrapper.utils.decorators import singleton
 
 
 @singleton
