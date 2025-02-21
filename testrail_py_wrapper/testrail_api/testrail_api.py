@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 import aiohttp
-
 from typing import Optional, Dict, Any
-
 from ..auth import Auth
 
-
 class TestRailAPI:
+    _cache = {}
+
     def __init__(self) -> None:
         """Initializes the TestRailAPI with authentication and base URL."""
         self.testrail_auth = Auth()
@@ -27,10 +26,19 @@ class TestRailAPI:
         :param data: JSON data to be sent with the request.
         :return: JSON response from the API.
         """
+        cache_key = (method, endpoint, frozenset(data.items()) if data else None)
+        if method == "GET" and cache_key in self._cache:
+            return self._cache[cache_key]
+
         async with aiohttp.ClientSession(auth=self.aio_http_auth) as session:
             url = self.base_url + endpoint
             async with session.request(method, url, json=data) as response:
-                return await response.json()
+                result = await response.json()
+
+                if method == "GET":
+                    self._cache[cache_key] = result
+
+                return result
 
     async def get_run_id_by_name(
             self,
