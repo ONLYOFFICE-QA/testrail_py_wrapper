@@ -87,7 +87,11 @@ class TestRailAPI:
         """
         return await self._request('GET', f'get_suites/{project_id}')
 
-    async def get_suite_id_by_name(self, project_id: int, suite_name: str) -> Optional[int]:
+    async def get_suite_id_by_name(
+            self,
+            project_id: int,
+            suite_name: str
+    ) -> Optional[int]:
         """
         Gets the ID of a test suite by its name.
 
@@ -99,7 +103,11 @@ class TestRailAPI:
         suite = next((s for s in suites if s['name'] == suite_name), None)
         return suite['id'] if suite else None
 
-    async def get_sections(self, project_id: int, suite_id: int) -> dict[str, Any]:
+    async def get_sections(
+            self,
+            project_id: int,
+            suite_id: int
+    ) -> dict[str, Any]:
         """
         Gets all test sections for a given project and suite ID.
 
@@ -109,7 +117,12 @@ class TestRailAPI:
         """
         return await self._request('GET', f'get_sections/{project_id}&suite_id={suite_id}')
 
-    async def get_section_id_by_name(self, project_id: int, suite_id: int, section_name: str) -> Optional[int]:
+    async def get_section_id_by_name(
+            self,
+            project_id: int,
+            suite_id: int,
+            section_name: str
+    ) -> Optional[int]:
         """
         Gets the ID of a test section by its name.
 
@@ -131,7 +144,11 @@ class TestRailAPI:
         """
         return await self._request('GET', f'get_plans/{project_id}')
 
-    async def get_plan_id_by_name(self, project_id: int, plan_name: str) -> Optional[int]:
+    async def get_plan_id_by_name(
+            self,
+            project_id: int,
+            plan_name: str
+    ) -> Optional[int]:
         """
         Gets the ID of a test plan by its name.
 
@@ -152,7 +169,11 @@ class TestRailAPI:
         """
         return await self._request('GET', f'get_tests/{run_id}')
 
-    async def get_test_id_by_name(self, run_id: int, test_name: str) -> Optional[int]:
+    async def get_test_id_by_name(
+            self,
+            run_id: int,
+            test_name: str
+    ) -> Optional[int]:
         """
         Gets the ID of a test by its name.
 
@@ -164,7 +185,12 @@ class TestRailAPI:
         test = next((t for t in tests if t['title'] == test_name), None)
         return test['id'] if test else None
 
-    async def create_test_case(self, section_id: int, title: str, description: str) -> Dict[str, Any]:
+    async def create_test_case(
+            self,
+            section_id: int,
+            title: str,
+            description: str
+    ) -> Dict[str, Any]:
         """
         Creates a new test case.
 
@@ -179,7 +205,12 @@ class TestRailAPI:
             {'title': title, 'custom_steps': description}
         )
 
-    async def create_section(self, project_id: int, suite_id: int, section_title: str) -> Dict[str, Any]:
+    async def create_section(
+            self,
+            project_id: int,
+            suite_id: int,
+            section_title: str
+    ) -> Dict[str, Any]:
         """
         Creates a new test section.
 
@@ -245,7 +276,11 @@ class TestRailAPI:
         )
         return new_plan.get('id', None)
 
-    async def add_plan_entry(self, plan_id: int, entry_data: Dict[str, Any]) -> Optional[int]:
+    async def add_plan_entry(
+            self,
+            plan_id: int,
+            entry_data: Dict[str, Any]
+    ) -> Optional[int]:
         """
         Adds a new entry to a test plan.
 
@@ -253,7 +288,11 @@ class TestRailAPI:
         :param entry_data: The data for the new entry.
         :return: The ID of the new test run or raises an error if it fails.
         """
-        new_run = await self._request('POST', f'add_plan_entry/{plan_id}', entry_data)
+        new_run = await self._request(
+            'POST',
+            f'add_plan_entry/{plan_id}',
+            entry_data
+        )
 
         if not new_run or "runs" not in new_run:
             raise ValueError("Failed to add plan entry.")
