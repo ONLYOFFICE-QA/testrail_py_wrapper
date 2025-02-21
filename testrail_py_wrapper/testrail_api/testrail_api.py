@@ -206,12 +206,16 @@ class TestRailAPI:
         :param section_title: The title of the section.
         :return: The ID of the new section or None if not created.
         """
-        new_section =  await self.api_client.request(
+        new_section = await self.api_client.request(
             'POST',
-            'add_section',
-            {'project_id': project_id, 'suite_id': suite_id, 'name': section_title}
+            f'add_section/{project_id}',
+            {'suite_id': suite_id, 'name': section_title}
         )
-        return new_section.get('id', None)
+
+        if not new_section or 'id' not in new_section:
+            raise ValueError(f'Failed to create section {section_title}')
+
+        return new_section['id']
 
     async def create_suite(
             self,
@@ -229,10 +233,14 @@ class TestRailAPI:
         """
         new_suite = await self.api_client.request(
             'POST',
-            'add_suite',
-            {'project_id': project_id, 'name': suite_name, 'description': description}
+            f'add_suite/{project_id}',
+            {'name': suite_name, 'description': description}
         )
-        return new_suite.get('id', None)
+
+        if not new_suite or 'id' not in new_suite:
+            raise ValueError(f'Failed to create suite {suite_name}')
+
+        return new_suite['id']
 
     async def add_result(self, test_id: int, result: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -242,6 +250,7 @@ class TestRailAPI:
         :param result: The result data to be added.
         :return: Response from the API.
         """
+        print(test_id)
         return await self.api_client.request('POST', f'add_result/{test_id}', result)
 
     async def add_plan(
@@ -277,11 +286,13 @@ class TestRailAPI:
         :param entry_data: The data for the new entry.
         :return: The ID of the new test run or raises an error if it fails.
         """
+        print(entry_data)
         new_run = await self.api_client.request(
             'POST',
             f'add_plan_entry/{plan_id}',
             entry_data
         )
+        print(new_run)
 
         if not new_run or "runs" not in new_run:
             raise ValueError("Failed to add plan entry.")

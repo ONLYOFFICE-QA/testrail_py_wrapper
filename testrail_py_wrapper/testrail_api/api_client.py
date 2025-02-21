@@ -21,6 +21,11 @@ class APIClient:
             url = self.base_url + endpoint
             async with session.request(method, url, json=data) as response:
                 result = await response.json()
+                if response.status != 200:
+                    raise RuntimeError(
+                        f"Request failed with status code {response.status} "
+                        f"for {method} request to {url}"
+                        )
 
                 if method == "GET":
                     self.__cache[cache_key] = result
