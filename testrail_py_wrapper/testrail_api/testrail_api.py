@@ -10,9 +10,7 @@ class TestRailAPI:
         """Initializes the TestRailAPI with authentication and base URL."""
         self.testrail_auth = Auth()
         self.base_url = self.testrail_auth.url + '/index.php?/api/v2/'
-        self.user = self.testrail_auth.username
-        self.password = self.testrail_auth.password
-        self.aio_http_auth = aiohttp.BasicAuth(self.user, self.password)
+        self.aio_http_auth = aiohttp.BasicAuth(self.testrail_auth.username, self.testrail_auth.password)
 
     async def _request(self, method: str, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
