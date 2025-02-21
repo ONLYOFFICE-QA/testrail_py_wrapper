@@ -125,7 +125,11 @@ class TestManager:
         """
         key = f"{project_id}_{suite_id}_{section_title}"
         if key not in self.__cache["sections"]:
-            section_id = await self.api.get_section_id_by_name(project_id, suite_id, section_title) or await self.api.create_section(project_id, suite_id, section_title)
+            section_id = (
+                    await self.api.get_section_id_by_name(project_id, suite_id, section_title) or
+                    await self.api.create_section(project_id, suite_id, section_title)
+            )
+
             self.__cache["sections"][key] = section_id
 
         return self.__cache["sections"][key]
