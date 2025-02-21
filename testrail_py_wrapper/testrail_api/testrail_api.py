@@ -69,8 +69,9 @@ class TestRailAPI:
         test = next((t for t in tests if t['title'] == test_name), None)
         return test['id'] if test else None
 
-    async def create_test_case(self, section_id: int, title: str, description: str) -> Dict[str, Any]:
-        return await self.api_client.request('POST', f'add_case/{section_id}', {'title': title, 'custom_steps': description})
+    async def create_test_case(self, section_id: int, title: str, description: str) -> Optional[int]:
+        new_test_case = await self.api_client.request('POST', f'add_case/{section_id}', {'title': title, 'custom_steps': description})
+        return new_test_case.get('id', None)
 
     async def create_section(self, project_id: int, suite_id: int, section_title: str) -> Dict[str, Any]:
         return await self.api_client.request('POST', 'add_section', {'project_id': project_id, 'suite_id': suite_id, 'name': section_title})

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import time
+
 from .utils.decorators import singleton
 from .testrail_api import TestRailAPI
 
@@ -37,11 +39,10 @@ class TestManager:
         :param suite_name: The name of the suite.
         :return: The suite ID.
         """
-        suite_id = (
-                await self.api.get_suite_id_by_name(project_id, suite_name) or
-                await self.api.create_suite(project_id, suite_name)
+        return (
+            await self.api.get_suite_id_by_name(project_id, suite_name) or
+            await self.api.create_suite(project_id, suite_name)
         )
-        return suite_id
 
     async def get_or_create_plan_id(self, project_id: int, plan_name: str) -> int:
         """
@@ -51,11 +52,10 @@ class TestManager:
         :param plan_name: The name of the plan.
         :return: The plan ID.
         """
-        plan_id = (
-                await self.api.get_plan_id_by_name(project_id, plan_name) or
-                await self.api.add_plan(project_id, plan_name)
-                )
-        return plan_id
+        return (
+            await self.api.get_plan_id_by_name(project_id, plan_name) or
+            await self.api.add_plan(project_id, plan_name)
+        )
 
     async def get_or_create_run_id(self, plan_id: int, run_name: str, suite_id: int) -> int:
         """
@@ -87,9 +87,10 @@ class TestManager:
         :param section_title: The title of the section.
         :return: The ID of the section.
         """
-        section_id = await self.api.get_section_id_by_name(project_id, suite_id, section_title) or \
-                     await self.api.create_section(project_id, suite_id, section_title)
-        return section_id
+        return (
+            await self.api.get_section_id_by_name(project_id, suite_id, section_title) or
+            await self.api.create_section(project_id, suite_id, section_title)
+        )
 
     async def get_or_create_test_id(self, run_id: int, case_title: str, project_id: int, suite_id: int, section_title: str) -> int:
         """
@@ -105,10 +106,14 @@ class TestManager:
         test_id = await self.api.get_test_id_by_name(run_id, case_title)
         if not test_id:
             section_id = await self.get_or_create_section_id(project_id, suite_id, section_title)
-            await self.api.create_test_case(section_id, case_title, case_title)
-            test_id = await self.api.get_test_id_by_name(run_id, case_title)
+            test_id = (
+                    await self.api.get_test_id_by_name(run_id, case_title) or
+                    await self.api.create_test_case(section_id, case_title, case_title)
+            )
+
             if not test_id:
                 raise ValueError(f"❌ Failed to get test ID for '{case_title}'")
+
         return test_id
 
     async def add_result_to_case(
@@ -131,6 +136,7 @@ class TestManager:
         :param section_title: The title of the section.
         :return: None
         """
+        start_time = time.perf_counter()
         project_id = await self.get_project_id_by_name(project_name)
         plan_id = await self.get_or_create_plan_id(project_id, plan_name)
         suite_id = await self.get_or_create_suite_id(project_id, suite_name)
@@ -138,3 +144,4 @@ class TestManager:
         test_id = await self.get_or_create_test_id(run_id, case_title, project_id, suite_id, section_title)
         await self.api.add_result(test_id, result)
         print(f"✅ Result added to test '{case_title}'")
+        print(f"⏱️  Execution time: {time.perf_counter() - start_time:.2f} seconds")
