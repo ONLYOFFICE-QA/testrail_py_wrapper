@@ -1,0 +1,16 @@
+[project]
+name = "testrail-py-wrapper"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "l02",email = "l8556@outlook.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
