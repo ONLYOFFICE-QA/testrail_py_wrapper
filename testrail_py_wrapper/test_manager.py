@@ -55,7 +55,11 @@ class TestManager:
         """
         key = f"{project_id}_{suite_name}"
         if key not in self.__cache["suites"]:
-            suite_id = await self.api.get_suite_id_by_name(project_id, suite_name) or await self.api.create_suite(project_id, suite_name)
+            suite_id = (
+                    await self.api.get_suite_id_by_name(project_id, suite_name) or
+                    await self.api.create_suite(project_id, suite_name)
+            )
+
             self.__cache["suites"][key] = suite_id
         return self.__cache["suites"][key]
 
@@ -73,7 +77,11 @@ class TestManager:
         """
         key = f"{project_id}_{plan_name}"
         if key not in self.__cache["plans"]:
-            plan_id = await self.api.get_plan_id_by_name(project_id, plan_name) or await self.api.add_plan(project_id, plan_name)
+            plan_id = (
+                    await self.api.get_plan_id_by_name(project_id, plan_name) or
+                    await self.api.add_plan(project_id, plan_name)
+            )
+
             self.__cache["plans"][key] = plan_id
         return self.__cache["plans"][key]
 
