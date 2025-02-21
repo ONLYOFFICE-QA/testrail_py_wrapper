@@ -1,5 +1,5 @@
-from optparse import Option
-from typing import Optional, Union, List, Dict, Any
+
+from typing import Optional, List, Dict, Any, Coroutine
 
 import aiohttp
 from ..auth import Auth
@@ -59,7 +59,7 @@ class TestRailAPI:
             return response
         return None
 
-    async def get_projects(self) -> List[Dict[str, Any]]:
+    async def get_projects(self) -> dict[str, Any]:
         """
         Gets all projects.
 
@@ -78,7 +78,7 @@ class TestRailAPI:
         project = next((p for p in projects if p['name'] == name), None)
         return project['id'] if project else None
 
-    async def get_suites(self, project_id: int) -> List[Dict[str, Any]]:
+    async def get_suites(self, project_id: int) -> dict[str, Any]:
         """
         Gets all test suites for a given project ID.
 
@@ -99,7 +99,7 @@ class TestRailAPI:
         suite = next((s for s in suites if s['name'] == suite_name), None)
         return suite['id'] if suite else None
 
-    async def get_sections(self, project_id: int, suite_id: int) -> List[Dict[str, Any]]:
+    async def get_sections(self, project_id: int, suite_id: int) -> dict[str, Any]:
         """
         Gets all test sections for a given project and suite ID.
 
@@ -122,7 +122,7 @@ class TestRailAPI:
         section = next((s for s in sections if s['name'] == section_name), None)
         return section['id'] if section else None
 
-    async def get_plans(self, project_id: int) -> List[Dict[str, Any]]:
+    async def get_plans(self, project_id: int) -> dict[str, Any]:
         """
         Gets all test plans for a given project ID.
 
@@ -143,7 +143,7 @@ class TestRailAPI:
         plan = next((p for p in plans if p['name'] == plan_name), None)
         return plan['id'] if plan else None
 
-    async def get_tests(self, run_id: int) -> List[Dict[str, Any]]:
+    async def get_tests(self, run_id: int) -> dict[str, Any]:
         """
         Gets all tests for a given test run ID.
 
@@ -173,7 +173,11 @@ class TestRailAPI:
         :param description: The description or steps for the test case.
         :return: Response from the API.
         """
-        return await self._request('POST', f'add_case/{section_id}', {'title': title, 'custom_steps': description})
+        return await self._request(
+            'POST',
+            f'add_case/{section_id}',
+            {'title': title, 'custom_steps': description}
+        )
 
     async def create_section(self, project_id: int, suite_id: int, section_title: str) -> Dict[str, Any]:
         """
@@ -184,9 +188,18 @@ class TestRailAPI:
         :param section_title: The title of the section.
         :return: Response from the API.
         """
-        return await self._request('POST', 'add_section', {'project_id': project_id, 'suite_id': suite_id, 'name': section_title})
+        return await self._request(
+            'POST',
+            'add_section',
+            {'project_id': project_id, 'suite_id': suite_id, 'name': section_title}
+        )
 
-    async def create_suite(self, project_id: int, suite_name: str, description: str = 'Created automatically by script') -> Dict[str, Any]:
+    async def create_suite(
+            self,
+            project_id: int,
+            suite_name: str,
+            description: str = 'Created automatically by script'
+    ) -> Dict[str, Any]:
         """
         Creates a new test suite.
 
@@ -195,7 +208,11 @@ class TestRailAPI:
         :param description: The description of the suite.
         :return: Response from the API.
         """
-        return await self._request('POST', 'add_suite', {'project_id': project_id, 'name': suite_name, 'description': description})
+        return await self._request(
+            'POST',
+            'add_suite',
+            {'project_id': project_id, 'name': suite_name, 'description': description}
+        )
 
     async def add_result(self, test_id: int, result: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -207,7 +224,12 @@ class TestRailAPI:
         """
         return await self._request('POST', f'add_result/{test_id}', result)
 
-    async def add_plan(self, project_id: int, plan_name: str, description: str = 'Created automatically by script') -> Optional[int]:
+    async def add_plan(
+            self,
+            project_id: int,
+            plan_name: str,
+            description: str = 'Created automatically by script'
+    ) -> Optional[int]:
         """
         Adds a new test plan.
 
@@ -216,12 +238,12 @@ class TestRailAPI:
         :param description: The description of the test plan.
         :return: The ID of the new test plan or None if creation failed.
         """
-        plan = await self._request(
+        new_plan = await self._request(
             'POST',
             f'add_plan/{project_id}',
             {'name': plan_name, 'description': description}
         )
-        return plan.get('id', None)
+        return new_plan.get('id', None)
 
     async def add_plan_entry(self, plan_id: int, entry_data: Dict[str, Any]) -> Optional[int]:
         """
