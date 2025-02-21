@@ -41,7 +41,11 @@ class TestManager:
             self.__cache["projects"][name] = project_id
         return self.__cache["projects"][name]
 
-    async def get_or_create_suite_id(self, project_id: int, suite_name: str) -> int:
+    async def get_or_create_suite_id(
+            self,
+            project_id: int,
+            suite_name: str
+    ) -> int:
         """
         Gets or creates a Suite ID by name.
 
@@ -55,7 +59,11 @@ class TestManager:
             self.__cache["suites"][key] = suite_id
         return self.__cache["suites"][key]
 
-    async def get_or_create_plan_id(self, project_id: int, plan_name: str) -> int:
+    async def get_or_create_plan_id(
+            self,
+            project_id: int,
+            plan_name: str
+    ) -> int:
         """
         Gets or creates a Plan ID by name.
 
@@ -69,7 +77,12 @@ class TestManager:
             self.__cache["plans"][key] = plan_id
         return self.__cache["plans"][key]
 
-    async def get_or_create_run_id(self, plan_id: int, run_name: str, suite_id: int) -> int:
+    async def get_or_create_run_id(
+            self,
+            plan_id: int,
+            run_name: str,
+            suite_id: int
+    ) -> int:
         """
         Gets or creates a Test Run ID by name.
 
@@ -96,7 +109,12 @@ class TestManager:
 
         return self.__cache["runs"][key]
 
-    async def get_or_create_section_id(self, project_id: int, suite_id: int, section_title: str) -> int:
+    async def get_or_create_section_id(
+            self,
+            project_id: int,
+            suite_id: int,
+            section_title: str
+    ) -> int:
         """
         Gets or creates a Section ID by title.
 

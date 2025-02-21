@@ -12,7 +12,12 @@ class TestRailAPI:
         self.base_url = self.testrail_auth.url + '/index.php?/api/v2/'
         self.aio_http_auth = aiohttp.BasicAuth(self.testrail_auth.username, self.testrail_auth.password)
 
-    async def _request(self, method: str, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def _request(
+            self,
+            method: str,
+            endpoint: str,
+            data: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """
         Makes a request to the TestRail API.
 
@@ -26,7 +31,11 @@ class TestRailAPI:
             async with session.request(method, url, json=data) as response:
                 return await response.json()
 
-    async def get_run_id_by_name(self, plan_id: int, run_name: str) -> Optional[int]:
+    async def get_run_id_by_name(
+            self,
+            plan_id: int,
+            run_name: str
+    ) -> Optional[int]:
         """
         Gets the ID of a test run by name within a Test Plan.
 
