@@ -12,7 +12,7 @@ class TestRailAPI:
         self.base_url = self.testrail_auth.url + '/index.php?/api/v2/'
         self.user = self.testrail_auth.username
         self.password = self.testrail_auth.password
-        self.auth = aiohttp.BasicAuth(self.user, self.password)
+        self.aio_http_auth = aiohttp.BasicAuth(self.user, self.password)
 
     async def _request(self, method: str, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
@@ -23,7 +23,7 @@ class TestRailAPI:
         :param data: JSON data to be sent with the request.
         :return: JSON response from the API.
         """
-        async with aiohttp.ClientSession(auth=self.auth) as session:
+        async with aiohttp.ClientSession(auth=self.aio_http_auth) as session:
             url = self.base_url + endpoint
             async with session.request(method, url, json=data) as response:
                 return await response.json()
