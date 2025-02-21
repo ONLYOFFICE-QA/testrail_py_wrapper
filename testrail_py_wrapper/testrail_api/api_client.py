@@ -11,10 +11,10 @@ class APIClient:
         self.base_url = base_url
         self.aio_http_auth = aiohttp.BasicAuth(username, password)
 
-    async def request(self, method: str, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def request(self, method: str, endpoint: str, data: Optional[Dict[str, Any]] = None, no_cache: bool = False) -> Dict[str, Any]:
         cache_key = (method, endpoint, frozenset(data.items()) if data else None)
 
-        if method == "GET" and cache_key in self.__cache:
+        if method == "GET" and cache_key in self.__cache and not no_cache:
             return self.__cache[cache_key]
 
         async with aiohttp.ClientSession(auth=self.aio_http_auth) as session:

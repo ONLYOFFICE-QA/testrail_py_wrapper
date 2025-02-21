@@ -146,19 +146,24 @@ class TestRailAPI:
         plan = next((p for p in plans if p['name'] == plan_name), None)
         return plan['id'] if plan else None
 
-    async def get_tests(self, run_id: int) -> dict[str, Any]:
+    async def get_tests(
+            self,
+            run_id: int,
+            no_cache: bool = False
+    ) -> dict[str, Any]:
         """
         Gets all tests for a given test run ID.
 
         :param run_id: The ID of the test run.
         :return: List of tests.
         """
-        return await self.api_client.request('GET', f'get_tests/{run_id}')
+        return await self.api_client.request('GET', f'get_tests/{run_id}', no_cache=no_cache)
 
     async def get_test_id_by_name(
             self,
             run_id: int,
-            test_name: str
+            test_name: str,
+            no_cache: bool = False
     ) -> Optional[int]:
         """
         Gets the ID of a test by its name.
@@ -167,7 +172,7 @@ class TestRailAPI:
         :param test_name: The name of the test.
         :return: The ID of the test or None if not found.
         """
-        tests = await self.get_tests(run_id)
+        tests = await self.get_tests(run_id, no_cache=no_cache)
         test = next((t for t in tests if t['title'] == test_name), None)
         return test['id'] if test else None
 
@@ -188,7 +193,10 @@ class TestRailAPI:
 
         new_test_case = await self.api_client.request(
             'POST', f'add_case/{section_id}',
-            {'title': title, 'custom_steps': description}
+            {
+                'title': title,
+                'custom_steps': description
+            }
         )
         return new_test_case.get('id', None)
 
@@ -250,7 +258,6 @@ class TestRailAPI:
         :param result: The result data to be added.
         :return: Response from the API.
         """
-        print(test_id)
         return await self.api_client.request('POST', f'add_result/{test_id}', result)
 
     async def add_plan(
@@ -286,13 +293,11 @@ class TestRailAPI:
         :param entry_data: The data for the new entry.
         :return: The ID of the new test run or raises an error if it fails.
         """
-        print(entry_data)
         new_run = await self.api_client.request(
             'POST',
             f'add_plan_entry/{plan_id}',
             entry_data
         )
-        print(new_run)
 
         if not new_run or "runs" not in new_run:
             raise ValueError("Failed to add plan entry.")

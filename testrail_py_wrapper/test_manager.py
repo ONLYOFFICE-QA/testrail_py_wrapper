@@ -106,11 +106,8 @@ class TestManager:
         test_id = await self.api.get_test_id_by_name(run_id, case_title)
         if not test_id:
             section_id = await self.get_or_create_section_id(project_id, suite_id, section_title)
-            test_id = (
-                    await self.api.get_test_id_by_name(run_id, case_title) or
-                    await self.api.create_test_case(section_id, case_title, case_title)
-            )
-
+            await self.api.create_test_case(section_id, case_title, case_title)
+            test_id = await self.api.get_test_id_by_name(run_id, case_title, no_cache=True) 
             if not test_id:
                 raise ValueError(f"❌ Failed to get test ID for '{case_title}'")
 
