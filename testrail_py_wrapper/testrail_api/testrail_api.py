@@ -1,7 +1,7 @@
-
-from typing import Optional, List, Dict, Any, Coroutine
-
+# -*- coding: utf-8 -*-
 import aiohttp
+from typing import Optional, Dict, Any
+
 from ..auth import Auth
 
 
