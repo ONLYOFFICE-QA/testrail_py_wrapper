@@ -21,6 +21,7 @@ class TestRailAPI:
 
         :param plan_id: The ID of the test plan.
         :param run_name: The name of the test run.
+        :param no_cache: If True, bypasses cache.
         :return: The ID of the test run or None if not found.
         """
         test_plan = await self.get_plan(plan_id, no_cache=no_cache)
@@ -39,6 +40,7 @@ class TestRailAPI:
         Gets a Test Plan by its ID.
 
         :param plan_id: The ID of the test plan.
+        :param no_cache: If True, bypasses cache.
         :return: The test plan as a dictionary or None if not found.
         """
         response = await self.api_client.request("GET", f"get_plan/{plan_id}", no_cache=no_cache)
@@ -50,6 +52,7 @@ class TestRailAPI:
         """
         Gets all projects.
 
+        :param no_cache: If True, bypasses cache.
         :return: List of projects.
         """
         return await self.api_client.request('GET', 'get_projects', no_cache=no_cache)
@@ -59,6 +62,7 @@ class TestRailAPI:
         Gets the ID of a project by its name.
 
         :param name: The name of the project.
+        :param no_cache: If True, bypasses cache.
         :return: The ID of the project or None if not found.
         """
         projects = await self.get_projects(no_cache=no_cache)
@@ -70,6 +74,7 @@ class TestRailAPI:
         Gets all test suites for a given project ID.
 
         :param project_id: The ID of the project.
+        :param no_cache: If True, bypasses cache.
         :return: List of test suites.
         """
         return await self.api_client.request('GET', f'get_suites/{project_id}', no_cache=no_cache)
@@ -85,6 +90,7 @@ class TestRailAPI:
 
         :param project_id: The ID of the project.
         :param suite_name: The name of the test suite.
+        :param no_cache: If True, bypasses cache.
         :return: The ID of the test suite or None if not found.
         """
         suites = await self.get_suites(project_id, no_cache=no_cache)
@@ -102,9 +108,14 @@ class TestRailAPI:
 
         :param project_id: The ID of the project.
         :param suite_id: The ID of the suite.
+        :param no_cache: If True, bypasses cache.
         :return: List of test sections.
         """
-        return await self.api_client.request('GET', f'get_sections/{project_id}&suite_id={suite_id}', no_cache=no_cache)
+        return await self.api_client.request(
+            'GET',
+            f'get_sections/{project_id}&suite_id={suite_id}',
+            no_cache=no_cache
+        )
 
     async def get_section_id_by_name(
             self,
@@ -119,6 +130,7 @@ class TestRailAPI:
         :param project_id: The ID of the project.
         :param suite_id: The ID of the suite.
         :param section_name: The name of the section.
+        :param no_cache: If True, bypasses cache.
         :return: The ID of the section or None if not found.
         """
         sections = await self.get_sections(project_id, suite_id, no_cache=no_cache)
@@ -130,6 +142,7 @@ class TestRailAPI:
         Gets all test plans for a given project ID.
 
         :param project_id: The ID of the project.
+        :param no_cache: If True, bypasses cache.
         :return: List of test plans.
         """
         return await self.api_client.request('GET', f'get_plans/{project_id}', no_cache=no_cache)
@@ -145,6 +158,7 @@ class TestRailAPI:
 
         :param project_id: The ID of the project.
         :param plan_name: The name of the test plan.
+        :param no_cache: If True, bypasses cache.
         :return: The ID of the test plan or None if not found.
         """
         plans = await self.get_plans(project_id, no_cache=no_cache)
@@ -160,6 +174,7 @@ class TestRailAPI:
         Gets all tests for a given test run ID.
 
         :param run_id: The ID of the test run.
+        :param no_cache: If True, bypasses cache.
         :return: List of tests.
         """
         return await self.api_client.request('GET', f'get_tests/{run_id}', no_cache=no_cache)
@@ -175,6 +190,7 @@ class TestRailAPI:
 
         :param run_id: The ID of the test run.
         :param test_name: The name of the test.
+        :param no_cache: If True, bypasses cache.
         :return: The ID of the test or None if not found.
         """
         tests = await self.get_tests(run_id, no_cache=no_cache)
