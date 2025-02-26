@@ -121,7 +121,7 @@ class TestManager:
             project_id: int, 
             suite_id: int, 
             section_title: str
-        ) -> str:
+        ) -> int:
         """
         Gets or creates a Test ID by title.
 
