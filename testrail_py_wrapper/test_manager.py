@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-import time
 
 from os import getcwd, makedirs
 from os.path import join, dirname
