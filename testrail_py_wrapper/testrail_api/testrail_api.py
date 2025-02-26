@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import re
 from typing import Optional, Dict, Any, Coroutine
 
 from .api_client import APIClient
@@ -66,8 +67,12 @@ class TestRailAPI:
         :return: The ID of the project or None if not found.
         """
         projects = await self.get_projects(no_cache=no_cache)
-        project = next((p for p in projects if p['name'] == name), None)
-        return project['id'] if project else None
+
+        if not projects:
+            return None
+
+        project = next((p for p in projects if p and p.get('name') == name), None)
+        return project.get('id', None) if isinstance(project, dict) else None
 
     async def get_suites(self, project_id: int, no_cache: bool = False) -> dict[str, Any]:
         """
@@ -94,8 +99,12 @@ class TestRailAPI:
         :return: The ID of the test suite or None if not found.
         """
         suites = await self.get_suites(project_id, no_cache=no_cache)
-        suite = next((s for s in suites if s['name'] == suite_name), None)
-        return suite['id'] if suite else None
+
+        if not suites:
+            return None
+        
+        suite = next((s for s in suites if s and s.get('name') == suite_name), None)
+        return suite.get('id') if isinstance(suite, dict) else None
 
     async def get_sections(
             self,
@@ -134,8 +143,12 @@ class TestRailAPI:
         :return: The ID of the section or None if not found.
         """
         sections = await self.get_sections(project_id, suite_id, no_cache=no_cache)
-        section = next((s for s in sections if s['name'] == section_name), None)
-        return section['id'] if section else None
+
+        if not sections:
+            return None
+
+        section = next((s for s in sections if s and s.get('name') == section_name), None)
+        return section.get('id') if isinstance(section, dict) else None
 
     async def get_plans(self, project_id: int, no_cache: bool = False) -> dict[str, Any]:
         """
@@ -162,7 +175,11 @@ class TestRailAPI:
         :return: The ID of the test plan or None if not found.
         """
         plans = await self.get_plans(project_id, no_cache=no_cache)
-        plan = next((p for p in plans if plans and p.get('name') == plan_name), None)
+        
+        if not plans:
+            return None
+        
+        plan = next((p for p in plans if p and p.get('name') == plan_name), None)
         return plan.get('id') if isinstance(plan, dict) else None
 
     async def get_tests(
@@ -194,7 +211,10 @@ class TestRailAPI:
         :return: The ID of the test or None if not found.
         """
         tests = await self.get_tests(run_id, no_cache=no_cache)
-        test = next((t for t in tests if t['title'] == test_name), None)
+        if not tests:
+            return None
+        
+        test = next((t for t in tests if t and t.get('title') == test_name), None)
         return test.get('id', None) if isinstance(test, dict) else None
 
     async def create_test_case(
