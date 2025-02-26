@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
+import time
+
 from os import getcwd, makedirs
 from os.path import join, dirname
 
@@ -60,10 +62,14 @@ class TestManager:
         :param plan_name: The name of the plan.
         :return: The plan ID.
         """
-        return (
+        plan_id = (
             await self.api.get_plan_id_by_name(project_id, plan_name) or
             await self.api.add_plan(project_id, plan_name)
         )
+        if not plan_id:
+            raise ValueError(f"❌ Failed to get or create plan ID for '{plan_name}'")
+        
+        return plan_id
 
     async def get_or_create_run_id(self, plan_id: int, run_name: str, suite_id: int) -> int:
         """
@@ -84,6 +90,9 @@ class TestManager:
                     "description": "Created automatically",
                 }
             )
+            if not run_id:
+                raise ValueError(f"❌ Failed to get or create run ID for '{run_name}'")
+        
         return run_id
 
     async def get_or_create_section_id(self, project_id: int, suite_id: int, section_title: str) -> int:
@@ -95,12 +104,24 @@ class TestManager:
         :param section_title: The title of the section.
         :return: The ID of the section.
         """
-        return (
-            await self.api.get_section_id_by_name(project_id, suite_id, section_title) or
+        section_id = (
+            await self.api.get_section_id_by_name(project_id, suite_id, section_title) or 
             await self.api.create_section(project_id, suite_id, section_title)
         )
 
-    async def get_or_create_test_id(self, run_id: int, case_title: str, project_id: int, suite_id: int, section_title: str) -> int:
+        if not section_id:
+            raise ValueError(f"❌ Failed to get or create section ID for '{section_title}'")
+        
+        return section_id
+
+    async def get_or_create_test_id(
+            self,
+            run_id: int, 
+            case_title: str, 
+            project_id: int, 
+            suite_id: int, 
+            section_title: str
+        ) -> str:
         """
         Gets or creates a Test ID by title.
 
@@ -114,6 +135,9 @@ class TestManager:
         test_id = await self.api.get_test_id_by_name(run_id, case_title, no_cache=False)
         if not test_id:
             section_id = await self.get_or_create_section_id(project_id, suite_id, section_title)
+            if not section_id:
+                raise ValueError(f"❌ Failed to get or create section ID for '{section_title}'")
+
             await self.api.create_test_case(section_id, case_title, case_title)
             test_id = await self.api.get_test_id_by_name(run_id, case_title, no_cache=True)
 
@@ -143,6 +167,7 @@ class TestManager:
         :return: None
         """
         try:
+            start_time = time.perf_counter()
             project_id = await self.get_project_id_by_name(project_name)
             plan_id = await self.get_or_create_plan_id(project_id, plan_name)
             suite_id = await self.get_or_create_suite_id(project_id, suite_name)
@@ -150,6 +175,8 @@ class TestManager:
             test_id = await self.get_or_create_test_id(run_id, case_title, project_id, suite_id, section_title)
             await self.api.add_result(test_id, result)
             print(f"✅ Result added to test '{case_title}'")
+            end_time = time.perf_counter()
+            print(f"⏱️ Time taken: {end_time - start_time:.2f} seconds")
 
         except (ValueError, RuntimeError) as e:
             await self._write_log(str(e))
