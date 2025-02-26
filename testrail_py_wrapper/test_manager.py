@@ -32,6 +32,7 @@ class TestManager:
         :return: The project ID or None if not found.
         """
         project_id = await self.api.get_project_id_by_name(name)
+
         if not project_id:
             raise ValueError(f"❌ Project '{name}' not found.")
 
@@ -49,6 +50,7 @@ class TestManager:
             await self.api.get_suite_id_by_name(project_id, suite_name) or
             await self.api.create_suite(project_id, suite_name)
         )
+
         if not suite_id:
             raise ValueError(f"❌ Failed to get or create suite ID for '{suite_name}'")
         
@@ -66,6 +68,7 @@ class TestManager:
             await self.api.get_plan_id_by_name(project_id, plan_name) or
             await self.api.add_plan(project_id, plan_name)
         )
+
         if not plan_id:
             raise ValueError(f"❌ Failed to get or create plan ID for '{plan_name}'")
         
@@ -90,6 +93,7 @@ class TestManager:
                     "description": "Created automatically",
                 }
             )
+
             if not run_id:
                 raise ValueError(f"❌ Failed to get or create run ID for '{run_name}'")
         
