@@ -180,7 +180,7 @@ class TestManager:
 
         except (ValueError, RuntimeError) as e:
             await self._write_log(str(e))
-                
+
     async def _write_log(self, message: str) -> None:
         makedirs(dirname(self.log_file), exist_ok=True)
         logging.basicConfig(filename=self.log_file, level=logging.ERROR, format='%(message)s')
