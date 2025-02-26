@@ -162,8 +162,11 @@ class TestRailAPI:
         :return: The ID of the test plan or None if not found.
         """
         plans = await self.get_plans(project_id, no_cache=no_cache)
-        plan = next((p for p in plans if p['name'] == plan_name), None)
-        return plan['id'] if plan else None
+        plan = next((p for p in plans if p.get('name') == plan_name), None)
+        if plan:
+            return plan['id']
+
+        raise ValueError(f"Test plan '{plan_name}' not found in project {project_id}")
 
     async def get_tests(
             self,
@@ -194,7 +197,11 @@ class TestRailAPI:
         :return: The ID of the test or None if not found.
         """
         tests = await self.get_tests(run_id, no_cache=no_cache)
+        if not tests or not isinstance(tests, list):
+            raise ValueError("Invalid response format from get_tests API")
+
         test = next((t for t in tests if t['title'] == test_name), None)
+
         if test:
             return test['id']
         
@@ -215,13 +222,17 @@ class TestRailAPI:
         :return: The ID of the new test case or None if not created.
         """
         new_test_case = await self.api_client.request(
-            'POST', f'add_case/{section_id}',
+            'POST',
+            f'add_case/{section_id}',
             {
                 'title': title,
                 'custom_steps': description
             }
         )
-        return new_test_case.get('id', None)
+        if new_test_case and "id" in new_test_case:
+            return new_test_case["id"]
+
+        raise ValueError(f"❌ Failed to create test case for '{title}'")
 
     async def create_section(
             self,
