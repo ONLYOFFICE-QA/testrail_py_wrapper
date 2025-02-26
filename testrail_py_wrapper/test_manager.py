@@ -43,10 +43,14 @@ class TestManager:
         :param suite_name: The name of the suite.
         :return: The suite ID.
         """
-        return (
+        suite_id =(
             await self.api.get_suite_id_by_name(project_id, suite_name) or
             await self.api.create_suite(project_id, suite_name)
         )
+        if not suite_id:
+            raise ValueError(f"❌ Failed to get or create suite ID for '{suite_name}'")
+        
+        return suite_id
 
     async def get_or_create_plan_id(self, project_id: int, plan_name: str) -> int:
         """

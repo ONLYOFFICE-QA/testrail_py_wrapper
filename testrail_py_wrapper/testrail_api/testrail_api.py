@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Coroutine
 
 from .api_client import APIClient
 from ..auth import Auth
@@ -162,8 +162,8 @@ class TestRailAPI:
         :return: The ID of the test plan or None if not found.
         """
         plans = await self.get_plans(project_id, no_cache=no_cache)
-        plan = next((p for p in plans if p['name'] == plan_name), None)
-        return plan['id'] if plan else None
+        plan = next((p for p in plans if plans and p.get('name') == plan_name), None)
+        return plan.get('id') if isinstance(plan, dict) else None
 
     async def get_tests(
             self,
@@ -184,7 +184,7 @@ class TestRailAPI:
             run_id: int,
             test_name: str,
             no_cache: bool = False
-    ) -> str:
+    ) -> Optional[int]:
         """
         Gets the ID of a test by its name.
 
@@ -195,10 +195,7 @@ class TestRailAPI:
         """
         tests = await self.get_tests(run_id, no_cache=no_cache)
         test = next((t for t in tests if t['title'] == test_name), None)
-        if test:
-            return test['id']
-        
-        raise ValueError(f"❌ Failed to get test ID for '{test_name}'")
+        return test.get('id', None) if isinstance(test, dict) else None
 
     async def create_test_case(
             self,
@@ -221,7 +218,7 @@ class TestRailAPI:
                 'custom_steps': description
             }
         )
-        return new_test_case.get('id', None)
+        return new_test_case.get('id', None) if isinstance(new_test_case, dict) else None
 
     async def create_section(
             self,
@@ -244,7 +241,8 @@ class TestRailAPI:
         )
 
         if not new_section or 'id' not in new_section:
-            raise ValueError(f'Failed to create section {section_title}')
+            print(f'Failed to create section {section_title}')
+            return None
 
         return new_section['id']
 
@@ -269,7 +267,8 @@ class TestRailAPI:
         )
 
         if not new_suite or 'id' not in new_suite:
-            raise ValueError(f'Failed to create suite {suite_name}')
+            print(f'Failed to create suite {suite_name}')
+            return None
 
         return new_suite['id']
 
@@ -302,7 +301,7 @@ class TestRailAPI:
             f'add_plan/{project_id}',
             {'name': plan_name, 'description': description}
         )
-        return new_plan.get('id', None)
+        return new_plan.get('id', None) if isinstance(new_plan, dict) else None
 
     async def add_plan_entry(
             self,
@@ -314,7 +313,7 @@ class TestRailAPI:
 
         :param plan_id: The ID of the test plan.
         :param entry_data: The data for the new entry.
-        :return: The ID of the new test run or raises an error if it fails.
+        :return: The ID of the new test run or None if it fails.
         """
         new_run = await self.api_client.request(
             'POST',
@@ -323,6 +322,7 @@ class TestRailAPI:
         )
 
         if not new_run or "runs" not in new_run:
-            raise ValueError("Failed to add plan entry.")
+            print("Failed to add plan entry.")
+            return None
 
         return new_run["runs"][0]["id"]
