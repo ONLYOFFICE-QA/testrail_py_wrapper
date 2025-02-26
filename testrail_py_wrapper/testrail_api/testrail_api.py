@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Optional, Dict, Any, Coroutine
+from typing import Optional, Dict, Any
 
 from .api_client import APIClient
 from ..auth import Auth
@@ -184,7 +184,7 @@ class TestRailAPI:
             run_id: int,
             test_name: str,
             no_cache: bool = False
-    ) -> Optional[int]:
+    ) -> str:
         """
         Gets the ID of a test by its name.
 
@@ -195,7 +195,10 @@ class TestRailAPI:
         """
         tests = await self.get_tests(run_id, no_cache=no_cache)
         test = next((t for t in tests if t['title'] == test_name), None)
-        return test['id'] if test else None
+        if test:
+            return test['id']
+        
+        raise ValueError(f"❌ Failed to get test ID for '{test_name}'")
 
     async def create_test_case(
             self,

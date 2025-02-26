@@ -5,58 +5,64 @@ from typing import Optional, Dict, Any
 
 class APIClient:
     """
-    A client for interacting with the TestRail API.
+    Client for interacting with the TestRail API.
 
     Attributes:
-        base_url (str): The base URL for the API.
-        aio_http_auth (aiohttp.BasicAuth): The authentication object for the API.
+        base_url (str): Base URL for the API.
+        aio_http_auth (aiohttp.BasicAuth): Authentication object for the API.
     """
     __cache = {}
 
     def __init__(self, base_url: str, username: str, password: str) -> None:
         """
-        Initializes the APIClient with the provided base URL and authentication details.
+        Initializes the APIClient.
 
-        Args:
-            base_url (str): The base URL for the API.
-            username (str): The username for authentication.
-            password (str): The password for authentication.
+        :param base_url: Base URL for the API.
+        :param username: Username for authentication.
+        :param password: Password for authentication.
         """
         self.base_url = base_url
         self.aio_http_auth = aiohttp.BasicAuth(username, password)
 
-    async def request(self, method: str, endpoint: str, data: Optional[Dict[str, Any]] = None, no_cache: bool = False) -> Dict[str, Any]:
+    async def request(
+        self,
+        method: str,
+        endpoint: str,
+        data: Optional[Dict[str, Any]] = None,
+        no_cache: bool = False
+    ) -> Dict[str, Any]:
         """
-        Sends a request to the API and returns the response.
+        Sends an API request.
 
-        Args:
-            method (str): The HTTP method (e.g., "GET", "POST").
-            endpoint (str): The API endpoint to request.
-            data (Optional[Dict[str, Any]]): The data to send with the request, if any.
-            no_cache (bool): If True, bypasses cache for GET requests.
+        :param method: HTTP method.
+        :param endpoint: API endpoint.
+        :param data: Request data.
+        :param no_cache: Bypass cache for GET requests.
 
-        Returns:
-            Dict[str, Any]: The response data from the API.
+        :return: API response.
 
-        Raises:
-            RuntimeError: If the request fails with a non-200 status code.
+        :raises RuntimeError: Request failed or connection error.
         """
         cache_key = (method, endpoint, frozenset(data.items()) if data else None)
 
         if not no_cache and method == "GET" and cache_key in self.__cache:
             return self.__cache[cache_key]
 
-        async with aiohttp.ClientSession(auth=self.aio_http_auth) as session:
-            url = self.base_url + endpoint
-            async with session.request(method, url, json=data) as response:
-                result = await response.json()
-                if response.status != 200:
-                    raise RuntimeError(
-                        f"Request failed with status code {response.status} "
-                        f"for {method} request to {url}"
-                    )
+        try:
+            async with aiohttp.ClientSession(auth=self.aio_http_auth) as session:
+                url = self.base_url + endpoint
+                async with session.request(method, url, json=data) as response:
+                    result = await response.json()
+                    if response.status != 200:
+                        raise RuntimeError(
+                            f"Request failed with status code {response.status} "
+                            f"for {method} request to {url}"
+                        )
 
-                if method == "GET":
-                    self.__cache[cache_key] = result
+                    if method == "GET":
+                        self.__cache[cache_key] = result
 
-                return result
+                    return result
+
+        except aiohttp.ClientError as e:
+            raise RuntimeError(f"Connection error occurred: {str(e)}")
