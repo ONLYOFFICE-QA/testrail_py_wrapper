@@ -5,6 +5,8 @@ from .api_client import APIClient
 from ..auth import Auth
 
 class TestRailAPI:
+    __cache = {}
+
     def __init__(self) -> None:
         self.testrail_auth = Auth()
         self.base_url = self.testrail_auth.url + '/index.php?/api/v2/'
@@ -24,6 +26,11 @@ class TestRailAPI:
         :param no_cache: If True, bypasses cache.
         :return: The ID of the test run or None if not found.
         """
+        cache_key = (plan_id, run_name)
+
+        if not no_cache and cache_key in self.__cache:
+            return self.__cache[cache_key]
+
         test_plan = await self.get_plan(plan_id, no_cache=no_cache)
         if not test_plan or "entries" not in test_plan:
             return None
@@ -31,7 +38,9 @@ class TestRailAPI:
         for entry in test_plan["entries"]:
             for run in entry.get("runs", []):
                 if run["name"] == run_name:
-                    return run["id"]
+                    run_id = run["id"]
+                    self.__cache[cache_key] = run_id
+                    return run_id
 
         return None
 
@@ -65,9 +74,22 @@ class TestRailAPI:
         :param no_cache: If True, bypasses cache.
         :return: The ID of the project or None if not found.
         """
+        if not no_cache and name in self.__cache:
+            return self.__cache[name]
+
         projects = await self.get_projects(no_cache=no_cache)
-        project = next((p for p in projects if p['name'] == name), None)
-        return project['id'] if project else None
+
+        if not projects:
+            return None
+
+        project = next((p for p in projects if p and p.get('name') == name), None)
+        project_id = project.get('id', None) if isinstance(project, dict) else None
+
+        if project_id is not None:
+            self.__cache[name] = project_id
+
+        return project_id
+
 
     async def get_suites(self, project_id: int, no_cache: bool = False) -> dict[str, Any]:
         """
@@ -93,9 +115,23 @@ class TestRailAPI:
         :param no_cache: If True, bypasses cache.
         :return: The ID of the test suite or None if not found.
         """
+        cache_key = (project_id, suite_name)
+
+        if not no_cache and cache_key in self.__cache:
+            return self.__cache[cache_key]
+
         suites = await self.get_suites(project_id, no_cache=no_cache)
-        suite = next((s for s in suites if s['name'] == suite_name), None)
-        return suite['id'] if suite else None
+
+        if not suites:
+            return None
+        
+        suite = next((s for s in suites if s and s.get('name') == suite_name), None)
+        suite_id = suite.get('id') if isinstance(suite, dict) else None
+
+        if suite_id is not None:
+            self.__cache[cache_key] = suite_id
+
+        return suite_id
 
     async def get_sections(
             self,
@@ -133,9 +169,23 @@ class TestRailAPI:
         :param no_cache: If True, bypasses cache.
         :return: The ID of the section or None if not found.
         """
+        cache_key = (project_id, suite_id, section_name)
+
+        if not no_cache and cache_key in self.__cache:
+            return self.__cache[cache_key]
+
         sections = await self.get_sections(project_id, suite_id, no_cache=no_cache)
-        section = next((s for s in sections if s['name'] == section_name), None)
-        return section['id'] if section else None
+
+        if not sections:
+            return None
+
+        section = next((s for s in sections if s and s.get('name') == section_name), None)
+        section_id = section.get('id') if isinstance(section, dict) else None
+
+        if section_id is not None:
+            self.__cache[cache_key] = section_id
+
+        return section_id
 
     async def get_plans(self, project_id: int, no_cache: bool = False) -> dict[str, Any]:
         """
@@ -154,16 +204,30 @@ class TestRailAPI:
             no_cache: bool = False
     ) -> Optional[int]:
         """
-        Gets the ID of a test plan by its name.
+        Gets the ID of a test plan by its name with caching.
 
         :param project_id: The ID of the project.
         :param plan_name: The name of the test plan.
         :param no_cache: If True, bypasses cache.
         :return: The ID of the test plan or None if not found.
         """
+        cache_key = (project_id, plan_name)
+
+        if not no_cache and cache_key in self.__cache:
+            return self.__cache[cache_key]
+
         plans = await self.get_plans(project_id, no_cache=no_cache)
-        plan = next((p for p in plans if p['name'] == plan_name), None)
-        return plan['id'] if plan else None
+
+        if not plans:
+            return None
+
+        plan = next((p for p in plans if p and p.get('name') == plan_name), None)
+        plan_id = plan.get('id') if isinstance(plan, dict) else None
+
+        if plan_id is not None:
+            self.__cache[cache_key] = plan_id
+
+        return plan_id
 
     async def get_tests(
             self,
@@ -184,21 +248,32 @@ class TestRailAPI:
             run_id: int,
             test_name: str,
             no_cache: bool = False
-    ) -> str:
+    ) -> Optional[int]:
         """
-        Gets the ID of a test by its name.
+        Gets the ID of a test by its name with caching.
 
         :param run_id: The ID of the test run.
         :param test_name: The name of the test.
         :param no_cache: If True, bypasses cache.
         :return: The ID of the test or None if not found.
         """
+        cache_key = (run_id, test_name)
+
+        if not no_cache and cache_key in self.__cache:
+            return self.__cache[cache_key]
+
         tests = await self.get_tests(run_id, no_cache=no_cache)
-        test = next((t for t in tests if t['title'] == test_name), None)
-        if test:
-            return test['id']
-        
-        raise ValueError(f"❌ Failed to get test ID for '{test_name}'")
+
+        if not tests:
+            return None
+
+        test = next((t for t in tests if t and t.get('title') == test_name), None)
+        test_id = test.get('id', None) if isinstance(test, dict) else None
+
+        if test_id is not None:
+            self.__cache[cache_key] = test_id
+
+        return test_id
 
     async def create_test_case(
             self,
@@ -221,7 +296,7 @@ class TestRailAPI:
                 'custom_steps': description
             }
         )
-        return new_test_case.get('id', None)
+        return new_test_case.get('id', None) if isinstance(new_test_case, dict) else None
 
     async def create_section(
             self,
@@ -244,7 +319,8 @@ class TestRailAPI:
         )
 
         if not new_section or 'id' not in new_section:
-            raise ValueError(f'Failed to create section {section_title}')
+            print(f'Failed to create section {section_title}')
+            return None
 
         return new_section['id']
 
@@ -269,7 +345,8 @@ class TestRailAPI:
         )
 
         if not new_suite or 'id' not in new_suite:
-            raise ValueError(f'Failed to create suite {suite_name}')
+            print(f'Failed to create suite {suite_name}')
+            return None
 
         return new_suite['id']
 
@@ -302,7 +379,7 @@ class TestRailAPI:
             f'add_plan/{project_id}',
             {'name': plan_name, 'description': description}
         )
-        return new_plan.get('id', None)
+        return new_plan.get('id', None) if isinstance(new_plan, dict) else None
 
     async def add_plan_entry(
             self,
@@ -314,7 +391,7 @@ class TestRailAPI:
 
         :param plan_id: The ID of the test plan.
         :param entry_data: The data for the new entry.
-        :return: The ID of the new test run or raises an error if it fails.
+        :return: The ID of the new test run or None if it fails.
         """
         new_run = await self.api_client.request(
             'POST',
@@ -323,6 +400,7 @@ class TestRailAPI:
         )
 
         if not new_run or "runs" not in new_run:
-            raise ValueError("Failed to add plan entry.")
+            print("Failed to add plan entry.")
+            return None
 
         return new_run["runs"][0]["id"]

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+
 from os import getcwd, makedirs
 from os.path import join, dirname
 
@@ -30,6 +31,7 @@ class TestManager:
         :return: The project ID or None if not found.
         """
         project_id = await self.api.get_project_id_by_name(name)
+
         if not project_id:
             raise ValueError(f"❌ Project '{name}' not found.")
 
@@ -43,10 +45,15 @@ class TestManager:
         :param suite_name: The name of the suite.
         :return: The suite ID.
         """
-        return (
+        suite_id =(
             await self.api.get_suite_id_by_name(project_id, suite_name) or
             await self.api.create_suite(project_id, suite_name)
         )
+
+        if not suite_id:
+            raise ValueError(f"❌ Failed to get or create suite ID for '{suite_name}'")
+        
+        return suite_id
 
     async def get_or_create_plan_id(self, project_id: int, plan_name: str) -> int:
         """
@@ -56,10 +63,15 @@ class TestManager:
         :param plan_name: The name of the plan.
         :return: The plan ID.
         """
-        return (
+        plan_id = (
             await self.api.get_plan_id_by_name(project_id, plan_name) or
             await self.api.add_plan(project_id, plan_name)
         )
+
+        if not plan_id:
+            raise ValueError(f"❌ Failed to get or create plan ID for '{plan_name}'")
+        
+        return plan_id
 
     async def get_or_create_run_id(self, plan_id: int, run_name: str, suite_id: int) -> int:
         """
@@ -80,6 +92,10 @@ class TestManager:
                     "description": "Created automatically",
                 }
             )
+
+            if not run_id:
+                raise ValueError(f"❌ Failed to get or create run ID for '{run_name}'")
+        
         return run_id
 
     async def get_or_create_section_id(self, project_id: int, suite_id: int, section_title: str) -> int:
@@ -91,12 +107,24 @@ class TestManager:
         :param section_title: The title of the section.
         :return: The ID of the section.
         """
-        return (
-            await self.api.get_section_id_by_name(project_id, suite_id, section_title) or
+        section_id = (
+            await self.api.get_section_id_by_name(project_id, suite_id, section_title) or 
             await self.api.create_section(project_id, suite_id, section_title)
         )
 
-    async def get_or_create_test_id(self, run_id: int, case_title: str, project_id: int, suite_id: int, section_title: str) -> int:
+        if not section_id:
+            raise ValueError(f"❌ Failed to get or create section ID for '{section_title}'")
+        
+        return section_id
+
+    async def get_or_create_test_id(
+            self,
+            run_id: int, 
+            case_title: str, 
+            project_id: int, 
+            suite_id: int, 
+            section_title: str
+        ) -> int:
         """
         Gets or creates a Test ID by title.
 
@@ -110,6 +138,9 @@ class TestManager:
         test_id = await self.api.get_test_id_by_name(run_id, case_title, no_cache=False)
         if not test_id:
             section_id = await self.get_or_create_section_id(project_id, suite_id, section_title)
+            if not section_id:
+                raise ValueError(f"❌ Failed to get or create section ID for '{section_title}'")
+
             await self.api.create_test_case(section_id, case_title, case_title)
             test_id = await self.api.get_test_id_by_name(run_id, case_title, no_cache=True)
 
@@ -149,7 +180,7 @@ class TestManager:
 
         except (ValueError, RuntimeError) as e:
             await self._write_log(str(e))
-                
+
     async def _write_log(self, message: str) -> None:
         makedirs(dirname(self.log_file), exist_ok=True)
         logging.basicConfig(filename=self.log_file, level=logging.ERROR, format='%(message)s')
