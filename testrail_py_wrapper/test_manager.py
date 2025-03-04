@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+from datetime import datetime
 
 from os import getcwd, makedirs
 from os.path import join, dirname
@@ -52,7 +53,7 @@ class TestManager:
 
         if not suite_id:
             raise ValueError(f"❌ Failed to get or create suite ID for '{suite_name}'")
-        
+
         return suite_id
 
     async def get_or_create_plan_id(self, project_id: int, plan_name: str) -> int:
@@ -70,7 +71,7 @@ class TestManager:
 
         if not plan_id:
             raise ValueError(f"❌ Failed to get or create plan ID for '{plan_name}'")
-        
+
         return plan_id
 
     async def get_or_create_run_id(self, plan_id: int, run_name: str, suite_id: int) -> int:
@@ -95,7 +96,7 @@ class TestManager:
 
             if not run_id:
                 raise ValueError(f"❌ Failed to get or create run ID for '{run_name}'")
-        
+
         return run_id
 
     async def get_or_create_section_id(self, project_id: int, suite_id: int, section_title: str) -> int:
@@ -108,21 +109,21 @@ class TestManager:
         :return: The ID of the section.
         """
         section_id = (
-            await self.api.get_section_id_by_name(project_id, suite_id, section_title) or 
+            await self.api.get_section_id_by_name(project_id, suite_id, section_title) or
             await self.api.create_section(project_id, suite_id, section_title)
         )
 
         if not section_id:
             raise ValueError(f"❌ Failed to get or create section ID for '{section_title}'")
-        
+
         return section_id
 
     async def get_or_create_test_id(
             self,
-            run_id: int, 
-            case_title: str, 
-            project_id: int, 
-            suite_id: int, 
+            run_id: int,
+            case_title: str,
+            project_id: int,
+            suite_id: int,
             section_title: str
         ) -> int:
         """
@@ -184,4 +185,4 @@ class TestManager:
     async def _write_log(self, message: str) -> None:
         makedirs(dirname(self.log_file), exist_ok=True)
         logging.basicConfig(filename=self.log_file, level=logging.ERROR, format='%(message)s')
-        logging.error(f"❌ {message}")
+        logging.error(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {message}")
